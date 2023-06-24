@@ -39,9 +39,8 @@ exports.newRegister = async(req,res)=>{
         createNew.token = userToken;
         await createNew.save();
 
-        const userVerify = `${req.protocol}://${req.get("host")}/api/userVerify/${createNew._id}`;
-        // const pageUrl = `${req.protocol}:/#/verify/${createNew._id}`
-        const message = "Thank you for registering with our app. Please click this link  to verify your account"
+        const VerifyRoute = `${req.protocol}://${req.get("host")}/api/Verify/${createNew._id}`;
+        const message = `thanks for signing up as an Admin ${createNew.firstName} Kindly use the link to verify your account  ${VerifyRoute}`;
         emailSender({
             from:process.env.USER,
             email: createNew.email,
@@ -75,12 +74,13 @@ exports.confirmVerify = async(req,res)=>{
     try{
         const id = req.params.id;
         
-        const user = await register.findById(id)
+        const admin = await register.findById(id)
        
         await register.findByIdAndUpdate(
-            user.id,
+            admin.id,
             {
-                isVerified : true
+                isVerified : true,
+                isAdmin:true
             },
             {
                 new: true
@@ -88,7 +88,7 @@ exports.confirmVerify = async(req,res)=>{
         )
 
         res.status(201).json({
-            message: "You have been verified"
+            message: "You have been verified and now an Admin"
         });
     }catch(e){
         res.status(400).json({
@@ -96,3 +96,35 @@ exports.confirmVerify = async(req,res)=>{
        });
     }
 }    
+
+exports.adminLogin = async(req,res) => {
+    try{
+        const {email} = req.body
+        const check = await register.findOne({ email: email}); 
+        if(!check) return res.status(404).json({message: "Not Found"});
+        const IsPassword = await bcryptjs.compare(req.body.password, check.password)
+        if(!IsPassword) return res.status(404).json({message: "Email or Password incorrect"});
+
+        const myToken = jwt.sign({
+            id: check._id,
+            password: check.password,
+            isAdmin: check.isAdmin
+        }, process.env.JWT_TOKEN,{ expiresIn: "1d"});
+
+        check.token = myToken
+        await check.save();
+        
+     const{password,...others} = check._doc
+
+        res.status(200).json({
+            message: "Successfully Login",
+            data: others
+        });
+    //  console.log(others)
+
+     }catch(e){
+        res.status(404).json({
+            message: e.message
+        });
+    }
+};
