@@ -8,7 +8,12 @@ const jwt = require("jsonwebtoken");
 exports.newRegister = async(req,res)=>{
     try{
         const {firstName,lastName,phoneNumber,email,password,confirmPassword} = req.body;
-        
+        const checkAdmin = await register.findOne( { email: email } );
+    if (checkAdmin) {
+      return res.status(400).json({
+        message: "Email already taken."
+      })
+    }
         if (password !== confirmPassword) {
           return res.status(400).json({ error: 'Password and confirm password do not match.' });
         }
@@ -34,7 +39,7 @@ exports.newRegister = async(req,res)=>{
         createNew.token = userToken;
         await createNew.save();
 
-        // const userVerify = `${req.protocol}://${req.get("host")}/api/userVerify/${createNew._id}`;
+        const userVerify = `${req.protocol}://${req.get("host")}/api/userVerify/${createNew._id}`;
         // const pageUrl = `${req.protocol}:/#/verify/${createNew._id}`
         const message = "Thank you for registering with our app. Please click this link  to verify your account"
         emailSender({
@@ -66,3 +71,28 @@ exports.newRegister = async(req,res)=>{
         });
     }
 };
+exports.confirmVerify = async(req,res)=>{
+    try{
+        const id = req.params.id;
+        
+        const user = await register.findById(id)
+       
+        await register.findByIdAndUpdate(
+            user.id,
+            {
+                isVerified : true
+            },
+            {
+                new: true
+            }
+        )
+
+        res.status(201).json({
+            message: "You have been verified"
+        });
+    }catch(e){
+        res.status(400).json({
+        message: e.message
+       });
+    }
+}    
