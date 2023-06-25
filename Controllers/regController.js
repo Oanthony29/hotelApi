@@ -96,7 +96,7 @@ exports.confirmVerify = async(req,res)=>{
        });
     }
 }    
-
+//Admin Login
 exports.adminLogin = async(req,res) => {
     try{
         const {email} = req.body
@@ -120,10 +120,41 @@ exports.adminLogin = async(req,res) => {
             message: "Successfully Login",
             data: others
         });
-    //  console.log(others)
+    
 
      }catch(e){
         res.status(404).json({
+            message: e.message
+        });
+    }
+};
+// Show All Admins
+exports.getAllAdmin = async(req,res)=>{
+    try{
+        const allAdmin = await register.find();
+        res.status(201).json({
+            message: "All Admin",
+            length: allAdmin.length,
+            data: allAdmin
+        });    
+    }catch(e){
+        res.status(400).json({
+            message: e.message
+        });
+    }
+};
+//get A Single Admin
+
+exports.getSingleAdmin = async(req,res)=>{
+    try{
+        const adminId = req.params.adminId;
+        const SingleAdmin = await register.findById(adminId);
+        res.status(201).json({
+            message: "Single Admin",
+            data: SingleAdmin
+        });    
+    }catch(e){
+        res.status(400).json({
             message: e.message
         });
     }
