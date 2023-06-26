@@ -159,3 +159,16 @@ exports.getSingleAdmin = async(req,res)=>{
         });
     }
 };
+
+exports.deleteRec = async(req,res)=>{
+    try{
+        const id = req.params.id
+        await register.findByIdAndDelete(id);
+
+        res.status(201).json({ message: " now Successfully  Deleted"})
+    }catch(e){
+        res.status(404).json({
+            message: e.message
+        });a
+    }
+};
