@@ -172,3 +172,20 @@ exports.deleteRec = async(req,res)=>{
         });a
     }
 };
+exports.changePassword = async(req,res)=>{
+    try{
+        const {password}= req.body
+       const adminId = req.params.adminId
+       const adminpassword = await register.findById(adminId)
+       const salt = bcryptjs.genSaltSync(10)
+       const hash = bcryptjs.hashSync(password, salt)
+       await register.findByIdAndUpdate(adminpassword,{password:hash},{new:true})
+       res.status(201).json({
+        message: "sucessfully changed password"
+       })
+    }catch(e){
+        res.status(400).json({
+            message:e.message
+        }) 
+    }
+};
