@@ -189,3 +189,51 @@ exports.changePassword = async(req,res)=>{
         }) 
     }
 };
+
+
+
+exports.resetpassword = async (req, res) => {
+    try{
+        const {email} = req.body
+        const adminEmail= await register .findOne({email})
+        if(!adminEmail) return  res.status(404).json({ message: "No Email" })
+
+        const VerifyLink = `${req.protocol}://${req.get("host")}/api/changepass/${adminEmail._id}`
+        const message = `Use this link ${adminEmail.firstName} to reset your password. ${VerifyLink}`;
+        emailSender({
+          from:process.env.USER,
+          email: adminEmail.email,
+          subject: "Reset Pasword",
+          message,
+        })
+        
+        res.status(201).json({
+            message:"email have been sent"
+        })
+    }catch(err){
+        res.status(400).json({
+            message:err.message
+        })
+    }
+};
+
+exports.adminLogOut = async(req,res)=>{
+    try{
+        const Adminlogout = await register.findById(req.params.adminId);
+        const myToken = jwt.sign({
+            id: Adminlogout._id,
+            password: Adminlogout.password,
+            isAdmin: Adminlogout.isAdmin
+        }, process.env.JWT_DESTROY,{ expiresIn: "5sec"});
+        Adminlogout.token = myToken;
+        await Adminlogout.save();
+        res.status(200).json({
+            message: "Successfully Logged Out"
+        });
+
+    }catch(e){
+        res.status(400).json({
+            message: e.message
+        });
+    }
+};
